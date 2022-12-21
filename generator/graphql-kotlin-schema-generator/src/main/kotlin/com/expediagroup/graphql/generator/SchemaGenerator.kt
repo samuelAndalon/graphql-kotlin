@@ -52,10 +52,10 @@ import kotlin.reflect.full.createType
 open class SchemaGenerator(internal val config: SchemaGeneratorConfig) : Closeable {
 
     internal val additionalTypes: MutableSet<AdditionalType> = mutableSetOf()
-    internal val classScanner = ClassScanner(config.supportedPackages)
-    internal val cache = TypesCache(config.supportedPackages)
-    internal val codeRegistry = GraphQLCodeRegistry.newCodeRegistry()
-    internal val directives = ConcurrentHashMap<String, GraphQLDirective>()
+    internal val classScanner: ClassScanner = ClassScanner(config.supportedPackages)
+    internal val cache: TypesCache = TypesCache(config.supportedPackages)
+    internal val directives: ConcurrentHashMap<String, GraphQLDirective> = ConcurrentHashMap<String, GraphQLDirective>()
+    internal val codeRegistry: GraphQLCodeRegistry.Builder = GraphQLCodeRegistry.newCodeRegistry()
 
     /**
      * Validate that the supported packages contain classes

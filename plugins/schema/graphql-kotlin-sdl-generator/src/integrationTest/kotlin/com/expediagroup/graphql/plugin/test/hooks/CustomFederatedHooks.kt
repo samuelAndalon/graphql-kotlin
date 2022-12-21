@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Expedia, Inc
+ * Copyright 2022 Expedia, Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,16 @@
 package com.expediagroup.graphql.plugin.test.hooks
 
 import com.expediagroup.graphql.generator.federation.FederatedSchemaGeneratorHooks
+import graphql.GraphQLContext
+import graphql.execution.CoercedVariables
 import graphql.language.StringValue
+import graphql.language.Value
 import graphql.schema.Coercing
 import graphql.schema.CoercingParseLiteralException
 import graphql.schema.CoercingParseValueException
 import graphql.schema.GraphQLScalarType
 import graphql.schema.GraphQLType
+import java.util.Locale
 import java.util.UUID
 import kotlin.reflect.KType
 
@@ -46,6 +50,10 @@ private val graphqlUUIDType = GraphQLScalarType.newScalar()
         }
 
         override fun serialize(dataFetcherResult: Any): String = dataFetcherResult.toString()
+
+        override fun parseValue(input: Any, graphQLContext: GraphQLContext, locale: Locale): UUID = parseValue(input)
+        override fun parseLiteral(input: Value<*>, variables: CoercedVariables, graphQLContext: GraphQLContext, locale: Locale): UUID = parseLiteral(input)
+        override fun serialize(dataFetcherResult: Any, graphQLContext: GraphQLContext, locale: Locale): String = serialize(dataFetcherResult)
     })
     .build()
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Expedia, Inc
+ * Copyright 2022 Expedia, Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.expediagroup.graphql.generator.federation.types
 
+import graphql.GraphQLContext
+import graphql.execution.CoercedVariables
 import graphql.language.ArrayValue
 import graphql.language.BooleanValue
 import graphql.language.EnumValue
@@ -23,9 +25,11 @@ import graphql.language.FloatValue
 import graphql.language.IntValue
 import graphql.language.ObjectValue
 import graphql.language.StringValue
+import graphql.language.Value
 import graphql.schema.Coercing
 import graphql.schema.CoercingParseLiteralException
 import graphql.schema.GraphQLScalarType
+import java.util.Locale
 
 /**
  * The _Any scalar is used to pass representations of entities from external services into the root _entities field for execution.
@@ -52,7 +56,11 @@ private object AnyCoercing : Coercing<Any, Any> {
             is BooleanValue -> input.isValue
             is EnumValue -> input.name
             is ArrayValue -> input.values.map { parseLiteral(it) }
-            is ObjectValue -> input.objectFields.associateBy({ it.name }, { parseLiteral(it.value) })
+            is ObjectValue -> input.objectFields.associateBy({ it.name }) { parseLiteral(it.value) }
             else -> throw CoercingParseLiteralException("Cannot parse $input to Any scalar")
         }
+
+    override fun parseValue(input: Any, graphQLContext: GraphQLContext, locale: Locale): Any = parseValue(input)
+    override fun parseLiteral(input: Value<*>, variables: CoercedVariables, graphQLContext: GraphQLContext, locale: Locale): Any = parseLiteral(input)
+    override fun serialize(dataFetcherResult: Any, graphQLContext: GraphQLContext, locale: Locale): Any = serialize(dataFetcherResult)
 }

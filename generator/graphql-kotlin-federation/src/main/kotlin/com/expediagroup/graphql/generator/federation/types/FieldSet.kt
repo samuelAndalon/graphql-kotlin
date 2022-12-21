@@ -19,7 +19,9 @@ package com.expediagroup.graphql.generator.federation.types
 import com.apollographql.federation.graphqljava._FieldSet
 import com.expediagroup.graphql.generator.federation.directives.FieldSet
 import com.expediagroup.graphql.generator.federation.exception.CoercingValueToLiteralException
+import graphql.GraphQLContext
 import graphql.Scalars
+import graphql.execution.CoercedVariables
 import graphql.language.StringValue
 import graphql.language.Value
 import graphql.schema.Coercing
@@ -32,6 +34,7 @@ import graphql.schema.GraphQLSchemaElement
 import graphql.schema.GraphQLTypeVisitorStub
 import graphql.util.TraversalControl
 import graphql.util.TraverserContext
+import java.util.Locale
 
 internal const val FIELD_SET_SCALAR_NAME = "FieldSet"
 internal const val FIELD_SET_ARGUMENT_NAME = "fields"
@@ -53,12 +56,6 @@ internal val FIELD_SET_ARGUMENT = GraphQLArgument.newArgument()
     .build()
 
 private object FieldSetCoercing : Coercing<FieldSet, String> {
-    override fun serialize(input: Any): String = if (input is FieldSet) {
-        input.value
-    } else {
-        throw CoercingSerializeException("Cannot serialize $input. Expected type 'FieldSet' but was '${input.javaClass.simpleName}'.")
-    }
-
     override fun parseValue(input: Any): FieldSet = parseLiteral(input)
 
     override fun parseLiteral(input: Any): FieldSet =
@@ -66,15 +63,26 @@ private object FieldSetCoercing : Coercing<FieldSet, String> {
             is FieldSet -> input
             is StringValue -> FieldSet::class.constructors.first().call(input.value)
             else -> {
-                throw CoercingParseLiteralException("Cannot parse $input to FieldSet. Expected AST type 'StringValue' but was '${input.javaClass.simpleName}'.")
+                throw CoercingParseLiteralException(
+                    "Cannot parse $input to FieldSet. Expected AST type 'StringValue' but was '${input.javaClass.simpleName}'."
+                )
             }
         }
 
-    override fun valueToLiteral(input: Any): Value<out Value<*>> = if (input is FieldSet) {
-        StringValue.newStringValue(input.value).build()
-    } else {
-        throw CoercingValueToLiteralException(_FieldSet::class, input)
-    }
+    override fun serialize(input: Any): String =
+        (input as? FieldSet)?.value ?: throw CoercingSerializeException(
+            "Cannot serialize $input. Expected type 'FieldSet' but was '${input.javaClass.simpleName}'."
+        )
+
+    override fun valueToLiteral(input: Any): Value<out Value<*>> =
+        (input as? FieldSet)?.let {
+            StringValue.newStringValue(input.value).build()
+        } ?: throw CoercingValueToLiteralException(_FieldSet::class, input)
+
+    override fun parseValue(input: Any, graphQLContext: GraphQLContext, locale: Locale): FieldSet = parseValue(input)
+    override fun parseLiteral(input: Value<*>, variables: CoercedVariables, graphQLContext: GraphQLContext, locale: Locale): FieldSet = parseLiteral(input)
+    override fun serialize(dataFetcherResult: Any, graphQLContext: GraphQLContext, locale: Locale): String = serialize(dataFetcherResult)
+    override fun valueToLiteral(input: Any, graphQLContext: GraphQLContext, locale: Locale): Value<*> = valueToLiteral(input)
 }
 
 /**

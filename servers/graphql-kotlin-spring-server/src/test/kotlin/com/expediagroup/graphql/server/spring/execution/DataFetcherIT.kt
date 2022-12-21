@@ -19,7 +19,10 @@ import com.expediagroup.graphql.generator.hooks.SchemaGeneratorHooks
 import com.expediagroup.graphql.server.operations.Query
 import com.expediagroup.graphql.server.types.GraphQLRequest
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import graphql.GraphQLContext
+import graphql.execution.CoercedVariables
 import graphql.language.StringValue
+import graphql.language.Value
 import graphql.schema.Coercing
 import graphql.schema.CoercingParseLiteralException
 import graphql.schema.CoercingParseValueException
@@ -35,6 +38,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.time.LocalDate
+import java.util.*
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
@@ -47,7 +51,7 @@ class DataFetcherIT(@Autowired private val testClient: WebTestClient) {
 
     @Test
     fun `verify custom jackson bindings work with function data fetcher`() {
-        val request = GraphQLRequest(query = "query { postWidget(widget: { id: 1, date: \"2020-01-01\" }) }")
+        val request = GraphQLRequest(query = """query { postWidget(widget: { id: 1, date: "2020-01-01" }) }""")
         testClient.post()
             .uri("/graphql")
             .accept(MediaType.APPLICATION_JSON)
@@ -90,14 +94,16 @@ class DataFetcherIT(@Autowired private val testClient: WebTestClient) {
             } catch (e: Exception) {
                 throw CoercingParseValueException("Cannot parse value $input to LocalDate", e)
             }
-
             override fun parseLiteral(input: Any): LocalDate = try {
                 LocalDate.parse((input as? StringValue)?.value)
             } catch (e: Exception) {
                 throw CoercingParseLiteralException("Cannot parse literal $input to LocalDate", e)
             }
-
             override fun serialize(dataFetcherResult: Any): String = dataFetcherResult.toString()
+
+            override fun parseValue(input: Any, graphQLContext: GraphQLContext, locale: Locale): LocalDate = parseValue(input)
+            override fun parseLiteral(input: Value<*>, variables: CoercedVariables, graphQLContext: GraphQLContext, locale: Locale): LocalDate = parseLiteral(input)
+            override fun serialize(dataFetcherResult: Any, graphQLContext: GraphQLContext, locale: Locale): String = serialize(dataFetcherResult)
         }
     }
 

@@ -7,7 +7,7 @@ val reactorExtensionsVersion: String by project
 
 dependencies {
     api(project(path = ":graphql-kotlin-schema-generator"))
-    api("com.apollographql.federation:federation-graphql-java-support:$federationGraphQLVersion")
+    api("com.apollographql.federation:federation-graphql-java-support:2.0-SNAPSHOT")
     testImplementation("io.projectreactor.kotlin:reactor-kotlin-extensions:$reactorExtensionsVersion")
     testImplementation("io.projectreactor:reactor-core:$reactorVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
